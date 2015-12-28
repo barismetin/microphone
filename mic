@@ -1,0 +1,100 @@
+/******************************
+*Artour = Baris METIN					*
+*Year=12.20.2015							*
+*http://barismetin.com				*
+*Follow ME ! on GitHub				*										 		
+*Description :Read Adc Value  *
+*and see how it change by Res.*
+******************************/
+#include <stm32f4xx.h>
+#include <stm32f4xx_gpio.h>
+#include <stm32f4xx_adc.h>
+#include <stm32f4xx_rcc.h>
+#include <stm32f4xx_tim.h>
+
+uint16_t Read_ADC(void)
+{
+  ADC_RegularChannelConfig(ADC1 ,ADC_Channel_0,1,ADC_SampleTime_56Cycles);
+	ADC_SoftwareStartConv(ADC1);
+	while(ADC_GetFlagStatus(ADC1,ADC_FLAG_EOC)==RESET);
+	return ADC_GetConversionValue(ADC1);
+	
+}
+
+
+int main ()
+{
+  uint8_t ADC_data;
+	
+ 
+ GPIO_InitTypeDef GPIO_InitStructure;//Gpio Yapilari olusturuldu
+ ADC_InitTypeDef ADC_InitStructure;
+ ADC_CommonInitTypeDef ADC_CommonInitStructure;
+
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA ,ENABLE);
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 ,ENABLE);//Adc Clock Verildi ve
+//D portu Tanimlandi ve yapisi olusturdu
+	
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_Pin =GPIO_Pin_12| GPIO_Pin_13 |GPIO_Pin_14|GPIO_Pin_15;
+	GPIO_InitStructure.GPIO_OType=GPIO_OType_PP;
+	GPIO_Init(GPIOD, & GPIO_InitStructure);
+ 	
+//A protu icin tanimlama yapiliyor
+	
+	GPIO_InitStructure.GPIO_Mode=GPIO_Mode_AN;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOA, & GPIO_InitStructure);
+	// Adc Config yapildigi Yer
+	
+	ADC_CommonInitStructure.ADC_Mode        =ADC_Mode_Independent;
+	ADC_CommonInitStructure.ADC_Prescaler   =ADC_Prescaler_Div4;
+	ADC_CommonInit(&ADC_CommonInitStructure);
+	
+	ADC_InitStructure.ADC_Resolution        =ADC_Resolution_8b;
+	ADC_Init(ADC1, & ADC_InitStructure);
+	ADC_Cmd(ADC1, ENABLE);
+
+	while(1)
+	{
+		ADC_data = Read_ADC();
+		
+	if(ADC_data<210)
+	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_13);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+	}
+	else if(ADC_data<220)
+	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		GPIO_SetBits(GPIOD, GPIO_Pin_13);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_14);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+		
+	}
+	
+	else if(ADC_data<230)
+	{
+		GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		GPIO_SetBits(GPIOD, GPIO_Pin_13);
+		GPIO_SetBits(GPIOD, GPIO_Pin_14);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_15);
+		
+	}
+
+else 
+ {
+		GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		GPIO_SetBits(GPIOD, GPIO_Pin_13);
+		GPIO_SetBits(GPIOD, GPIO_Pin_14);
+		GPIO_SetBits(GPIOD, GPIO_Pin_15);
+		
+ }
+
+ }
+}
